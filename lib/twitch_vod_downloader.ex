@@ -73,7 +73,6 @@ defmodule TwitchVodDownloader do
     Task.async_stream(
       parts,
       fn p ->
-        IO.puts("Starting download for #{p}")
         %HTTPoison.Response{body: body} = HTTPoison.get!(base_url <> p)
         File.write(dest <> p, body)
       end,
