@@ -1,15 +1,16 @@
 defmodule TwitchVodDownloader do
-  def get_token(client_id, video_id) do
-    headers = [Accept: "application/vnd.twitchtv.v5+json", "Client-ID": client_id]
+  def headers do
+    client_id = "jzkbprff40iqj646a697cyrvl0zt2m6"
+    [Accept: "application/vnd.twitchtv.v5+json", "Client-ID": client_id]
+  end
 
+  def get_token(video_id) do
     url = "https://api.twitch.tv/api/vods/#{video_id}/access_token?as3=t"
 
     # fetch token
 
-    IO.puts("Fetching access_token")
-
     body =
-      case HTTPoison.get(url, headers, []) do
+      case HTTPoison.get(url, headers(), []) do
         {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
           body
 
@@ -28,10 +29,27 @@ defmodule TwitchVodDownloader do
     sig = json["sig"]
     token = json["token"]
 
-    IO.puts("Got access token: #{token}")
-    IO.puts("Signature: #{sig}")
-
     {token, sig}
+  end
+
+  def get_filename(video_id) do
+    url = "https://api.twitch.tv/kraken/videos/#{video_id}"
+
+    body =
+      case HTTPoison.get(url, headers(), []) do
+        {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+          body
+
+        {:error, %HTTPoison.Error{reason: reason}} ->
+          IO.inspect(reason)
+          raise "Error occurred fetching stream info."
+      end
+
+    json = Jason.decode!(body)
+    channelname = json["channel"]["display_name"]
+    title = json["title"]
+
+    Zarex.sanitize("#{channelname} - #{title}.ts")
   end
 
   def get_playlist_url({token, sig}, video_id) do
@@ -57,7 +75,6 @@ defmodule TwitchVodDownloader do
 
   def get_parts(url) do
     base_url = Regex.replace(~r/index-dvr\.m3u8/, url, "")
-    IO.puts("Base url: #{base_url}")
     playlist = HTTPoison.get!(url).body
 
     part_names =
@@ -85,9 +102,7 @@ defmodule TwitchVodDownloader do
   end
 
   def download_video_parts(video_id, dest) do
-    client_id = "jzkbprff40iqj646a697cyrvl0zt2m6"
-
-    token = get_token(client_id, video_id)
+    token = get_token(video_id)
 
     {base_url, parts} =
       get_playlist_url(token, video_id)
@@ -124,7 +139,7 @@ defmodule TwitchVodDownloader do
 
     # Define paths
     tmpDir = "./tmp/#{video_id}/"
-    dest_file = "./dest/#{video_id}.ts"
+    dest_file = "./dest/#{get_filename(video_id)}"
 
     # Start download
     IO.puts("Starting download process")
@@ -135,6 +150,7 @@ defmodule TwitchVodDownloader do
     merged_file = merge_ts_files(tmpDir)
 
     # Copy merged file to destiniation
+    IO.puts("Copying file.")
     File.rename(merged_file, dest_file)
 
     # Delete temp files
