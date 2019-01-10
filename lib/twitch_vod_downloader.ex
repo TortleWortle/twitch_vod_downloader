@@ -75,7 +75,6 @@ defmodule TwitchVodDownloader do
       fn p ->
         IO.puts("Starting download for #{p}")
         %HTTPoison.Response{body: body} = HTTPoison.get!(base_url <> p)
-        IO.puts("Saving " <> dest <> p)
         File.write(dest <> p, body)
       end,
       timeout: :infinity,
@@ -112,7 +111,6 @@ defmodule TwitchVodDownloader do
     else
       # merge all files.
       Enum.each(files, fn f ->
-        IO.puts("Starting merging: #{f}")
         File.write!(dest <> "all.ts", File.read!(dest <> f), [:append])
       end)
     end
