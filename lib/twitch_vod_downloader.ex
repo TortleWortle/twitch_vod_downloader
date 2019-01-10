@@ -135,7 +135,7 @@ defmodule TwitchVodDownloader do
     merged_file = merge_ts_files(tmpDir)
 
     # Copy merged file to destiniation
-    File.copy!(merged_file, dest_file)
+    File.rename!(merged_file, dest_file)
 
     # Delete temp files
     IO.puts("Deleting temp files")
