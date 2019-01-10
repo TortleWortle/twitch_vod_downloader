@@ -141,6 +141,8 @@ defmodule TwitchVodDownloader do
     # Delete temp files
     IO.puts("Deleting temp files")
     File.rm_rf!(tmpDir)
+
+    IO.puts("Done!")
   end
 
   def main(args) when args != [] do
