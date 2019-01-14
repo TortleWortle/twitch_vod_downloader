@@ -69,7 +69,7 @@ defmodule TwitchVodDownloader do
           raise "Error occurred."
       end
 
-    Regex.run(~r<.*/chunked/index-dvr\.m3u8$>m, meta_playlists)
+    Regex.run(~r<.*/chunked/index-.*\.m3u8$>m, meta_playlists)
     |> List.first()
   end
 
