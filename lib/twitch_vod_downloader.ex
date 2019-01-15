@@ -49,7 +49,7 @@ defmodule TwitchVodDownloader do
     channelname = json["channel"]["display_name"]
     title = json["title"]
 
-    Zarex.sanitize("#{channelname} - #{title}.ts")
+    Zarex.sanitize("#{channelname} - #{title} (#{video_id}).ts")
   end
 
   def get_playlist_url({token, sig}, video_id) do
@@ -74,7 +74,7 @@ defmodule TwitchVodDownloader do
   end
 
   def get_parts(url) do
-    base_url = Regex.replace(~r/index-dvr\.m3u8/, url, "")
+    base_url = Regex.replace(~r/index-.*\.m3u8/, url, "")
     playlist = HTTPoison.get!(url).body
 
     part_names =
